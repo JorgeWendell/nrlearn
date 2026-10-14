@@ -1,13 +1,18 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requireAdmin } from "@/lib/session";
+
+export async function countAdmins() {
+  const [row] = await db.select({ total: count() }).from(users).where(eq(users.role, "ADMIN"));
+  return Number(row?.total ?? 0);
+}
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
@@ -107,6 +112,49 @@ export async function createProfessorAction(formData: FormData) {
 export async function createAdminAction(formData: FormData) {
   formData.set("role", "ADMIN");
   return createStaffAction(formData);
+}
+
+export async function bootstrapAdminAction(formData: FormData) {
+  if ((await countAdmins()) > 0) {
+    return { error: "Já existe um administrador. Use o login." };
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (name.length < 3 || !email.includes("@") || password.length < 6) {
+    return { error: "Preencha nome, email válido e senha com ao menos 6 caracteres." };
+  }
+
+  const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (existing) return { error: "Já existe uma conta com este email." };
+
+  await db.insert(users).values({
+    name,
+    email,
+    passwordHash: await hash(password, 10),
+    role: "ADMIN",
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/login");
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      portal: "admin",
+      redirectTo: "/admin",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Conta criada, mas o login automático falhou. Entre em /admin/login." };
+    }
+    throw error;
+  }
 }
 
 export async function logoutAction() {

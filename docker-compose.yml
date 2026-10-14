@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nrlearn-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nrlearn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-nrlearn}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-nrlearn} -d ${POSTGRES_DB:-nrlearn}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - nrlearn-network
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: nrlearn-migrate
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nrlearn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-nrlearn}
+      POSTGRES_HOST: db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nrlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nrlearn}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nrlearn-network
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        AUTH_URL: ${AUTH_URL:-https://nrlearn.adelweb.com.br}
+    container_name: nrlearn-app
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nrlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nrlearn}
+      AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET no .env}
+      AUTH_URL: ${AUTH_URL:-https://nrlearn.adelweb.com.br}
+      AUTH_TRUST_HOST: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - nrlearn-network
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-proxy}
+      - traefik.http.routers.nrlearn.rule=Host(`${APP_DOMAIN:-nrlearn.adelweb.com.br}`)
+      - traefik.http.routers.nrlearn.entrypoints=websecure
+      - traefik.http.routers.nrlearn.tls=true
+      - traefik.http.routers.nrlearn.tls.certresolver=letsencrypt
+      - traefik.http.routers.nrlearn.service=nrlearn
+      - traefik.http.services.nrlearn.loadbalancer.server.port=3000
+      - traefik.http.routers.nrlearn-http.rule=Host(`${APP_DOMAIN:-nrlearn.adelweb.com.br}`)
+      - traefik.http.routers.nrlearn-http.entrypoints=web
+      - traefik.http.routers.nrlearn-http.middlewares=nrlearn-https-redirect
+      - traefik.http.middlewares.nrlearn-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.nrlearn-https-redirect.redirectscheme.permanent=true
+
+networks:
+  nrlearn-network:
+    driver: bridge
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-proxy}
+
+volumes:
+  postgres_data:

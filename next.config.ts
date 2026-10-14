@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  serverExternalPackages: ["postgres"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
