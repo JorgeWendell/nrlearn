@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { submitAssessment } from "@/lib/actions/assessment";
+import { toActionState, type ActionState } from "@/lib/form-state";
 
 type Question = {
   id: string;
@@ -27,10 +28,11 @@ export function AssessmentForm({
   const max = type === "PROVA" ? 2 : Number.POSITIVE_INFINITY;
   const canTry = attemptsUsed < max;
 
-  async function action(_: { error?: string; score?: number } | null, formData: FormData) {
-    return submitAssessment(assessmentId, formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) =>
+      toActionState(await submitAssessment(assessmentId, formData)),
+    null,
+  );
 
   return (
     <div className="space-y-6">

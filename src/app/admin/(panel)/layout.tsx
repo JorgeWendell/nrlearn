@@ -15,7 +15,7 @@ async function AdminFrame({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-col bg-[#efe8dc] md:flex-row">
-      <AdminSidebar adminName={admin.name} />
+      <AdminSidebar adminName={admin.name ?? "Administrador"} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

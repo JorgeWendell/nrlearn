@@ -2,12 +2,16 @@
 
 import { useActionState } from "react";
 import { createAdminAction, createProfessorAction } from "@/lib/actions/auth";
+import { toActionState, type ActionState } from "@/lib/form-state";
 
 export function CreateStaffForm({ role }: { role: "PROFESSOR" | "ADMIN" }) {
-  async function action(_: { error?: string; success?: string } | null, formData: FormData) {
-    return role === "ADMIN" ? createAdminAction(formData) : createProfessorAction(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) =>
+      toActionState(
+        await (role === "ADMIN" ? createAdminAction(formData) : createProfessorAction(formData)),
+      ),
+    null,
+  );
   const isAdmin = role === "ADMIN";
 
   return (

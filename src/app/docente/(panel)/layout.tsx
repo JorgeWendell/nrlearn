@@ -15,7 +15,7 @@ async function DocenteFrame({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-col bg-[#efe8dc] md:flex-row">
-      <DocenteSidebar professorName={professor.name} />
+      <DocenteSidebar professorName={professor.name ?? "Professor"} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

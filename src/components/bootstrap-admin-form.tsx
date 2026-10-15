@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import { bootstrapAdminAction } from "@/lib/actions/auth";
+import { toActionState, type ActionState } from "@/lib/form-state";
 
 export function BootstrapAdminForm() {
-  async function action(_: { error?: string } | null, formData: FormData) {
-    return bootstrapAdminAction(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) =>
+      toActionState(await bootstrapAdminAction(formData)),
+    null,
+  );
 
   return (
     <form action={formAction} className="space-y-4">

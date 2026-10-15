@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { addAssessment, addLesson, addQuestion, upsertCourse } from "@/lib/actions/teacher";
+import { toActionState, type ActionState } from "@/lib/form-state";
 
 export function CourseEditorForm({
   course,
@@ -15,10 +16,10 @@ export function CourseEditorForm({
     published: boolean;
   };
 }) {
-  async function action(_: { error?: string; ok?: boolean } | null, formData: FormData) {
-    return upsertCourse(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) => toActionState(await upsertCourse(formData)),
+    null,
+  );
 
   return (
     <form action={formAction} className="space-y-4">
@@ -82,10 +83,10 @@ export function CourseEditorForm({
 }
 
 export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; nextOrder: number }) {
-  async function action(_: { error?: string; ok?: boolean } | null, formData: FormData) {
-    return addLesson(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) => toActionState(await addLesson(formData)),
+    null,
+  );
 
   return (
     <form action={formAction} className="space-y-4">
@@ -128,10 +129,10 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
 }
 
 export function AssessmentEditorForm({ courseId }: { courseId: string }) {
-  async function action(_: { error?: string; ok?: boolean } | null, formData: FormData) {
-    return addAssessment(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) => toActionState(await addAssessment(formData)),
+    null,
+  );
 
   return (
     <form action={formAction} className="space-y-4">
@@ -179,10 +180,10 @@ export function QuestionEditorForm({
   courseId: string;
   assessmentId: string;
 }) {
-  async function action(_: { error?: string; ok?: boolean } | null, formData: FormData) {
-    return addQuestion(formData);
-  }
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    async (_prev: ActionState, formData: FormData) => toActionState(await addQuestion(formData)),
+    null,
+  );
 
   return (
     <form action={formAction} className="space-y-4">
