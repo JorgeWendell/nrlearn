@@ -2,15 +2,12 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { authConfig } from "@/auth.config";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -46,20 +43,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id!;
-        token.role = user.role;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = typeof token.id === "string" ? token.id : "";
-      const role = token.role;
-      session.user.role =
-        role === "ALUNO" || role === "PROFESSOR" || role === "ADMIN" ? role : "ALUNO";
-      return session;
-    },
-  },
 });

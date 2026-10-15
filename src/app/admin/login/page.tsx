@@ -1,8 +1,7 @@
-import { connection } from "next/server";
 import { Suspense } from "react";
 import { BootstrapAdminForm } from "@/components/bootstrap-admin-form";
 import { LoginForm } from "@/components/login-form";
-import { countAdmins } from "@/lib/actions/auth";
+import { countAdmins } from "@/lib/admin";
 
 export default function AdminLoginPage() {
   return (
@@ -13,7 +12,6 @@ export default function AdminLoginPage() {
 }
 
 async function AdminLoginContent() {
-  await connection();
   const admins = await countAdmins();
   const firstRun = admins === 0;
 

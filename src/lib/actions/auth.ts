@@ -1,18 +1,16 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { countAdmins } from "@/lib/admin";
 import { requireAdmin } from "@/lib/session";
 
-export async function countAdmins() {
-  const [row] = await db.select({ total: count() }).from(users).where(eq(users.role, "ADMIN"));
-  return Number(row?.total ?? 0);
-}
+export { countAdmins };
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
