@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { courses, lessons } from "@/db/schema";
 
 export async function getFeaturedCourses() {
-  "use cache";
   return db
     .select()
     .from(courses)
@@ -13,7 +12,6 @@ export async function getFeaturedCourses() {
 }
 
 export async function getPublishedCourses() {
-  "use cache";
   return db
     .select()
     .from(courses)
@@ -22,7 +20,6 @@ export async function getPublishedCourses() {
 }
 
 export async function getPublishedCourseBySlug(slug: string) {
-  "use cache";
   const [course] = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
   if (!course || !course.published) return null;
 
