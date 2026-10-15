@@ -1,4 +1,5 @@
 import { desc, eq } from "drizzle-orm";
+import { AlunoPageHeader } from "@/components/aluno-page-header";
 import { CreateStaffForm } from "@/components/create-staff-form";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -17,12 +18,12 @@ export default async function CadastroProfessoresPage() {
     .orderBy(desc(users.createdAt));
 
   return (
-    <main className="page max-w-5xl py-10">
-      <p className="kicker">Cadastros</p>
-      <h1 className="display mt-2 text-3xl md:text-4xl">Professor</h1>
-      <p className="mt-2 text-sm text-muted">
-        Contas docentes entram em <span className="font-medium text-navy">/docente/login</span>.
-      </p>
+    <div>
+      <AlunoPageHeader
+        crumbs={["Início", "Cadastros", "Professor"]}
+        title="Professor"
+        subtitle="Contas docentes entram em /docente/login."
+      />
       <section className="mt-8 grid gap-8 md:grid-cols-2">
         <div className="card p-6">
           <h2 className="font-serif text-2xl">Novo professor</h2>
@@ -46,6 +47,6 @@ export default async function CadastroProfessoresPage() {
           </ul>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

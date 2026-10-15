@@ -17,9 +17,9 @@ const serif = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "NRLearn — Bombeiros e Normas Regulamentadoras",
+  title: "Fire Prevenção — Segurança do Trabalho e Prevenção contra Incêndios",
   description:
-    "Instituição de ensino para formação de bombeiros civis e capacitação em NRs com cursos online.",
+    "Atuamos promovendo ambientes de trabalho seguros, saudáveis e em conformidade com as normas, preservando vidas, o patrimônio e a continuidade das operações.",
 };
 
 export const dynamic = "force-dynamic";

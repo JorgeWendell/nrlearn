@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { LessonPlayer } from "@/components/lesson-player";
 import { db } from "@/db";
 import { courses, enrollments, lessonProgress, lessons } from "@/db/schema";
-import { isLessonUnlocked } from "@/lib/progress";
+import { isLessonUnlocked } from "@/lib/lesson-unlock";
 import { requireAluno } from "@/lib/session";
 
 export default async function LessonPage({
@@ -23,7 +22,7 @@ export default async function LessonPage({
     .where(and(eq(enrollments.userId, user.id), eq(enrollments.courseId, course.id)))
     .limit(1);
   if (!enrollment || (enrollment.status !== "ATIVA" && enrollment.status !== "CONCLUIDA")) {
-    redirect(`/cursos/${slug}`);
+    redirect(`/aluno/cursos/${slug}`);
   }
 
   const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
@@ -45,18 +44,13 @@ export default async function LessonPage({
   }
 
   return (
-    <main className="page max-w-4xl">
-      <Link href={`/aluno/cursos/${slug}`} className="text-sm font-semibold text-ember">
-        ← Voltar ao curso
-      </Link>
-      <h1 className="display mt-4 text-3xl md:text-4xl">{lesson.title}</h1>
-      <div className="mt-6">
-        <LessonPlayer
-          lessonId={lesson.id}
-          videoUrl={lesson.videoUrl}
-          completed={completed.has(lesson.id)}
-        />
-      </div>
-    </main>
+    <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col p-6">
+      <h1 className="mb-3 shrink-0 text-lg font-semibold">{lesson.title}</h1>
+      <LessonPlayer
+        lessonId={lesson.id}
+        videoUrl={lesson.videoUrl}
+        completed={completed.has(lesson.id)}
+      />
+    </div>
   );
 }

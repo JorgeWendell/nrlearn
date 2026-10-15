@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import { AlunoPageHeader } from "@/components/aluno-page-header";
+
 export function DocenteShell({
   kicker = "Área docente",
   title,
@@ -5,13 +8,12 @@ export function DocenteShell({
 }: {
   kicker?: string;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <main className="page max-w-5xl py-10">
-      <p className="kicker">{kicker}</p>
-      <h1 className="display mt-2 text-3xl md:text-4xl">{title}</h1>
-      <div className="mt-8">{children}</div>
-    </main>
+    <div>
+      <AlunoPageHeader crumbs={["Início", kicker]} title={title} />
+      {children}
+    </div>
   );
 }

@@ -27,12 +27,4 @@ export async function maybeCompleteEnrollment(userId: string, courseId: string) 
     );
 }
 
-export function isLessonUnlocked(
-  orderedLessons: { id: string }[],
-  completedIds: Set<string>,
-  lessonId: string,
-) {
-  const index = orderedLessons.findIndex((l) => l.id === lessonId);
-  if (index <= 0) return true;
-  return completedIds.has(orderedLessons[index - 1].id);
-}
+export { isLessonUnlocked } from "@/lib/lesson-unlock";

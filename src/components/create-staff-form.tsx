@@ -29,8 +29,8 @@ export function CreateStaffForm({ role }: { role: "PROFESSOR" | "ADMIN" }) {
         <input name="password" type="password" minLength={6} required className="mt-1" />
       </label>
       {state?.error ? <p className="text-sm text-ember">{state.error}</p> : null}
-      {state?.success ? <p className="text-sm text-navy">{state.success}</p> : null}
-      <button disabled={pending} className="btn btn-navy">
+      {state?.success ? <p className="text-sm text-emerald-400">{state.success}</p> : null}
+      <button disabled={pending} className="btn btn-primary">
         {pending ? "Criando..." : isAdmin ? "Criar administrador" : "Criar professor"}
       </button>
     </form>

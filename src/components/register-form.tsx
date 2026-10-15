@@ -26,7 +26,7 @@ export function RegisterForm() {
         <input name="password" type="password" minLength={6} required className="mt-1" />
       </label>
       {state?.error ? <p className="text-sm text-ember">{state.error}</p> : null}
-      <button disabled={pending} className="btn btn-navy w-full">
+      <button disabled={pending} className="btn btn-primary w-full">
         {pending ? "Criando..." : "Criar conta"}
       </button>
     </form>

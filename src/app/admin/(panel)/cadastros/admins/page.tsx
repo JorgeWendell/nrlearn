@@ -1,4 +1,5 @@
 import { desc, eq } from "drizzle-orm";
+import { AlunoPageHeader } from "@/components/aluno-page-header";
 import { CreateStaffForm } from "@/components/create-staff-form";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -17,13 +18,12 @@ export default async function CadastroAdminsPage() {
     .orderBy(desc(users.createdAt));
 
   return (
-    <main className="page max-w-5xl py-10">
-      <p className="kicker">Cadastros</p>
-      <h1 className="display mt-2 text-3xl md:text-4xl">Admin</h1>
-      <p className="mt-2 text-sm text-muted">
-        Novos usuários entram em <span className="font-medium text-navy">/admin/login</span> com
-        permissão total do painel.
-      </p>
+    <div>
+      <AlunoPageHeader
+        crumbs={["Início", "Cadastros", "Admin"]}
+        title="Admin"
+        subtitle="Novos usuários entram em /admin/login com permissão total do painel."
+      />
       <section className="mt-8 grid gap-8 md:grid-cols-2">
         <div className="card p-6">
           <h2 className="font-serif text-2xl">Novo administrador</h2>
@@ -46,6 +46,6 @@ export default async function CadastroAdminsPage() {
           </ul>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

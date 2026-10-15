@@ -179,3 +179,55 @@ input[type="radio"] {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
 }
+
+.aluno-app {
+  min-height: 100vh;
+  background: #0b1220;
+  color: #e8eef7;
+}
+
+.aluno-app .aluno-card,
+.aluno-app .card {
+  background: #121a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  box-shadow: none;
+  color: inherit;
+}
+
+.aluno-app .btn-outline {
+  background: transparent;
+  color: #e8eef7;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.aluno-app .text-navy {
+  color: #e8eef7;
+}
+
+.aluno-app a {
+  color: inherit;
+}
+
+.aluno-app .text-muted {
+  color: #8b9cb3;
+}
+
+.aluno-app label,
+.aluno-app legend,
+.site-dark label,
+.site-dark legend {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.aluno-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.aluno-app textarea,
+.aluno-app select,
+.site-dark input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.site-dark textarea,
+.site-dark select {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e8eef7;
+}

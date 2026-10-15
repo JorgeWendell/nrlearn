@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { AssessmentForm } from "@/components/assessment-form";
 import { db } from "@/db";
 import { assessments, attempts, courses, enrollments, options, questions } from "@/db/schema";
+import { getProvaAttemptState } from "@/lib/prova-attempts";
 import { requireAluno } from "@/lib/session";
 
 export default async function AssessmentPage({
@@ -22,7 +22,7 @@ export default async function AssessmentPage({
     .where(and(eq(enrollments.userId, user.id), eq(enrollments.courseId, course.id)))
     .limit(1);
   if (!enrollment || (enrollment.status !== "ATIVA" && enrollment.status !== "CONCLUIDA")) {
-    redirect(`/cursos/${slug}`);
+    redirect(`/aluno/cursos/${slug}`);
   }
 
   const [assessment] = await db
@@ -50,27 +50,26 @@ export default async function AssessmentPage({
     .from(attempts)
     .where(and(eq(attempts.userId, user.id), eq(attempts.assessmentId, assessment.id)));
 
-  const showGabarito =
-    assessment.type === "QUIZ"
-      ? myAttempts.length > 0
-      : myAttempts.length >= 2;
+  const orderedAttempts = [...myAttempts].sort(
+    (a, b) => new Date(a.finishedAt).getTime() - new Date(b.finishedAt).getTime(),
+  );
+  const prova = assessment.type === "PROVA" ? getProvaAttemptState(orderedAttempts) : null;
+  const showGabarito = assessment.type === "QUIZ" ? orderedAttempts.length > 0 : (prova?.showGabarito ?? false);
 
   return (
-    <main className="page max-w-3xl">
-      <Link href={`/aluno/cursos/${slug}`} className="text-sm font-semibold text-ember">
-        ← Voltar ao curso
-      </Link>
-      <h1 className="display mt-4 text-3xl md:text-4xl">{assessment.title}</h1>
-      <div className="mt-6">
-        <AssessmentForm
-          assessmentId={assessment.id}
-          type={assessment.type}
-          questions={questionsWithOptions}
-          attemptsUsed={myAttempts.length}
-          lastScore={myAttempts.at(-1)?.score ?? null}
-          showGabarito={showGabarito}
-        />
-      </div>
-    </main>
+    <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col p-6 md:p-10">
+      <h1 className="mb-6 text-2xl font-semibold">{assessment.title}</h1>
+      <AssessmentForm
+        assessmentId={assessment.id}
+        type={assessment.type}
+        questions={questionsWithOptions}
+        attemptsUsed={orderedAttempts.length}
+        lastScore={orderedAttempts.at(-1)?.score ?? null}
+        showGabarito={showGabarito}
+        canTry={assessment.type === "QUIZ" ? true : (prova?.canTry ?? false)}
+        windowLabel={prova?.windowLabel}
+        unlockAt={prova?.unlockAt?.toISOString() ?? null}
+      />
+    </div>
   );
 }

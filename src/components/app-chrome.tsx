@@ -13,6 +13,7 @@ export function AppChrome({
 }) {
   const pathname = usePathname();
   const isAppPanel =
+    pathname.startsWith("/aluno") ||
     (pathname.startsWith("/admin") && pathname !== "/admin/login") ||
     (pathname.startsWith("/docente") && pathname !== "/docente/login");
 

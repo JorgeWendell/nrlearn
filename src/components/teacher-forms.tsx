@@ -14,6 +14,11 @@ export function CourseEditorForm({
     workloadHours: number;
     price: string;
     published: boolean;
+    category?: string;
+    level?: string;
+    coverUrl?: string | null;
+    featured?: boolean;
+    prerequisites?: string | null;
   };
 }) {
   const [state, formAction, pending] = useActionState(
@@ -66,9 +71,40 @@ export function CourseEditorForm({
           />
         </label>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm">
+          Categoria
+          <input name="category" defaultValue={course?.category ?? "Geral"} className="mt-1" />
+        </label>
+        <label className="block text-sm">
+          Nível
+          <select name="level" defaultValue={course?.level ?? "Iniciante"} className="mt-1">
+            <option>Iniciante</option>
+            <option>Intermediário</option>
+            <option>Avançado</option>
+          </select>
+        </label>
+      </div>
+      <label className="block text-sm">
+        Capa (URL da imagem)
+        <input name="coverUrl" defaultValue={course?.coverUrl ?? ""} className="mt-1" />
+      </label>
+      <label className="block text-sm">
+        Pré-requisitos
+        <textarea
+          name="prerequisites"
+          rows={3}
+          defaultValue={course?.prerequisites ?? ""}
+          className="mt-1"
+        />
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input name="published" type="checkbox" defaultChecked={course?.published} />
         Publicar no catálogo
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input name="featured" type="checkbox" defaultChecked={course?.featured} />
+        Destacar no topo da área do aluno
       </label>
       {state?.error ? <p className="text-sm text-ember">{state.error}</p> : null}
       {state?.ok ? <p className="text-sm text-navy">Curso salvo.</p> : null}
@@ -91,6 +127,10 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="courseId" value={courseId} />
+      <label className="block text-sm">
+        Módulo
+        <input name="moduleName" defaultValue="Módulo 1" className="mt-1" />
+      </label>
       <label className="block text-sm">
         Título da aula
         <input

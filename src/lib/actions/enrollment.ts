@@ -27,6 +27,8 @@ export async function requestEnrollment(courseId: string) {
 
   revalidatePath(`/cursos/${course.slug}`);
   revalidatePath("/aluno");
+  revalidatePath("/aluno/cursos");
+  revalidatePath(`/aluno/cursos/${course.slug}`);
   return { ok: true };
 }
 

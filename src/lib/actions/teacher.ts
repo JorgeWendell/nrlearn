@@ -16,18 +16,35 @@ export async function upsertCourse(formData: FormData) {
   const workloadHours = Number(formData.get("workloadHours") ?? 8);
   const price = String(formData.get("price") ?? "0");
   const published = formData.get("published") === "on";
+  const category = String(formData.get("category") ?? "Geral").trim() || "Geral";
+  const level = String(formData.get("level") ?? "Iniciante").trim() || "Iniciante";
+  const coverUrl = String(formData.get("coverUrl") ?? "").trim() || null;
+  const featured = formData.get("featured") === "on";
+  const prerequisites = String(formData.get("prerequisites") ?? "").trim() || null;
 
   if (!title || !description) return { error: "Título e descrição são obrigatórios." };
 
   if (id) {
     await db
       .update(courses)
-      .set({ title, description, workloadHours, price, published })
+      .set({
+        title,
+        description,
+        workloadHours,
+        price,
+        published,
+        category,
+        level,
+        coverUrl,
+        featured,
+        prerequisites,
+      })
       .where(eq(courses.id, id));
     revalidatePath("/docente");
     revalidatePath("/docente/cursos");
     revalidatePath(`/docente/cursos/${id}`);
     revalidatePath("/cursos");
+    revalidatePath("/aluno/cursos");
     return { ok: true, id };
   }
 
@@ -37,12 +54,25 @@ export async function upsertCourse(formData: FormData) {
 
   const [created] = await db
     .insert(courses)
-    .values({ title, description, workloadHours, price, published, slug })
+    .values({
+      title,
+      description,
+      workloadHours,
+      price,
+      published,
+      slug,
+      category,
+      level,
+      coverUrl,
+      featured,
+      prerequisites,
+    })
     .returning();
 
   revalidatePath("/docente");
   revalidatePath("/docente/cursos");
   revalidatePath("/cursos");
+  revalidatePath("/aluno/cursos");
   redirect(`/docente/cursos/${created.id}`);
 }
 
@@ -52,10 +82,11 @@ export async function addLesson(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const videoUrl = String(formData.get("videoUrl") ?? "").trim();
   const order = Number(formData.get("order") ?? 1);
+  const moduleName = String(formData.get("moduleName") ?? "Módulo 1").trim() || "Módulo 1";
 
   if (!courseId || !title || !videoUrl) return { error: "Preencha aula, URL e ordem." };
 
-  await db.insert(lessons).values({ courseId, title, videoUrl, order });
+  await db.insert(lessons).values({ courseId, title, videoUrl, order, moduleName });
   revalidatePath(`/docente/cursos/${courseId}/aulas`);
   return { ok: true };
 }

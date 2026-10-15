@@ -1,3 +1,4 @@
+import { AlunoPageHeader } from "@/components/aluno-page-header";
 import { getAdminMetrics } from "@/lib/admin-metrics";
 import { formatBRL } from "@/lib/format";
 import { requireAdmin } from "@/lib/session";
@@ -16,11 +17,10 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <main className="page max-w-5xl py-10">
-      <p className="kicker">Dashboard</p>
-      <h1 className="display mt-2 text-3xl md:text-4xl">Olá, {admin.name}</h1>
+    <div>
+      <AlunoPageHeader crumbs={["Início", "Dashboard"]} title={`Olá, ${admin.name}`} />
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <article key={kpi.label} className="card p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{kpi.label}</p>
@@ -76,6 +76,6 @@ export default async function AdminDashboardPage() {
           </ul>
         </article>
       </section>
-    </main>
+    </div>
   );
 }

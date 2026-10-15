@@ -28,6 +28,21 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const studentProfiles = pgTable("student_profiles", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  headline: text("headline"),
+  company: text("company"),
+  location: text("location"),
+  website: text("website"),
+  linkedin: text("linkedin"),
+  github: text("github"),
+  about: text("about"),
+  notifyUpdates: boolean("notify_updates").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const courses = pgTable("courses", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: text("slug").notNull().unique(),
@@ -36,6 +51,11 @@ export const courses = pgTable("courses", {
   workloadHours: integer("workload_hours").notNull().default(8),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   published: boolean("published").notNull().default(false),
+  category: text("category").notNull().default("Geral"),
+  level: text("level").notNull().default("Iniciante"),
+  coverUrl: text("cover_url"),
+  featured: boolean("featured").notNull().default(false),
+  prerequisites: text("prerequisites"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -48,6 +68,7 @@ export const lessons = pgTable("lessons", {
   videoUrl: text("video_url").notNull(),
   order: integer("order").notNull(),
   durationSeconds: integer("duration_seconds"),
+  moduleName: text("module_name").notNull().default("Módulo 1"),
 });
 
 export const assessments = pgTable("assessments", {
@@ -137,10 +158,18 @@ export const revenueEntries = pgTable("revenue_entries", {
   occurredAt: timestamp("occurred_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   enrollments: many(enrollments),
   progress: many(lessonProgress),
   attempts: many(attempts),
+  studentProfile: one(studentProfiles, {
+    fields: [users.id],
+    references: [studentProfiles.userId],
+  }),
+}));
+
+export const studentProfilesRelations = relations(studentProfiles, ({ one }) => ({
+  user: one(users, { fields: [studentProfiles.userId], references: [users.id] }),
 }));
 
 export const coursesRelations = relations(courses, ({ many }) => ({

@@ -4,9 +4,8 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { assessments, attempts, courses, enrollments, options, questions } from "@/db/schema";
+import { getProvaAttemptState } from "@/lib/prova-attempts";
 import { requireAluno } from "@/lib/session";
-
-const PROVA_MAX = 2;
 
 export async function submitAssessment(assessmentId: string, formData: FormData) {
   const user = await requireAluno();
@@ -32,8 +31,16 @@ export async function submitAssessment(assessmentId: string, formData: FormData)
     .from(attempts)
     .where(and(eq(attempts.userId, user.id), eq(attempts.assessmentId, assessmentId)));
 
-  if (assessment.type === "PROVA" && previous.length >= PROVA_MAX) {
-    return { error: "Você já usou as 2 tentativas desta prova." };
+  if (assessment.type === "PROVA") {
+    const prova = getProvaAttemptState(previous);
+    if (!prova.canTry) {
+      if (prova.unlockAt) {
+        return {
+          error: `As 2 tentativas iniciais acabaram. Novas tentativas liberam em ${prova.unlockAt.toLocaleString("pt-BR")}.`,
+        };
+      }
+      return { error: "Você já usou as 4 tentativas desta prova." };
+    }
   }
 
   const qs = await db

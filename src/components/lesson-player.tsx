@@ -11,6 +11,8 @@ declare global {
         id: string,
         opts: {
           videoId: string;
+          width?: string | number;
+          height?: string | number;
           playerVars?: Record<string, number>;
           events?: { onStateChange?: (e: { data: number }) => void };
         },
@@ -51,6 +53,8 @@ export function LessonPlayer({
       if (!window.YT?.Player) return;
       new window.YT.Player(playerId, {
         videoId: youtubeId,
+        width: "100%",
+        height: "100%",
         playerVars: { rel: 0, modestbranding: 1 },
         events: {
           onStateChange: (e) => {
@@ -91,8 +95,8 @@ export function LessonPlayer({
   }, [vimeoId]);
 
   return (
-    <div className="space-y-3">
-      <div className="aspect-video overflow-hidden rounded-3xl bg-navy shadow-[0_24px_60px_-28px_rgba(7,17,31,0.7)]">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-black [&_iframe]:h-full [&_iframe]:w-full">
         {youtubeId ? (
           <div id={playerId} className="h-full w-full" />
         ) : vimeoId ? (
