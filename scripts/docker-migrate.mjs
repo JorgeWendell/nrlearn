@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import postgres from "postgres";
+import pg from "pg";
 
 const user = process.env.POSTGRES_USER ?? "nrlearn";
 const password = process.env.POSTGRES_PASSWORD ?? "";
@@ -18,16 +18,17 @@ process.env.CI = "true";
 
 console.log(`Conectando em ${host}:${port}/${database} como ${user}...`);
 
-const sql = postgres(databaseUrl, { max: 1 });
+const client = new pg.Client({ connectionString: databaseUrl });
 
 try {
-  await sql`SELECT 1`;
+  await client.connect();
+  await client.query("SELECT 1");
   console.log("Conexão com PostgreSQL OK.");
 } catch (error) {
   console.error("Erro ao conectar no PostgreSQL:", error);
   process.exit(1);
 } finally {
-  await sql.end({ timeout: 5 });
+  await client.end();
 }
 
 try {

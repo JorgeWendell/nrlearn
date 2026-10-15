@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["postgres"],
+  serverExternalPackages: ["pg"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

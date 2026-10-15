@@ -15,7 +15,6 @@ COPY . .
 ARG AUTH_URL=https://nrlearn.adelweb.com.br
 ENV AUTH_URL=$AUTH_URL
 ENV AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
-ENV DATABASE_URL=postgresql://nrlearn:build@127.0.0.1:5432/nrlearn
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
