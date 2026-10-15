@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["pg"],
-  cacheComponents: true,
-  partialPrefetching: true,
+  agentRules: false,
   turbopack: {
     rules: {
       "*.css": {

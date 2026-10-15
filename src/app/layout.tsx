@@ -26,16 +26,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${sans.variable} ${serif.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">
-        <AppChrome
-          header={
-            <Suspense fallback={<SiteHeaderFallback />}>
-              <SiteHeader />
-            </Suspense>
-          }
-          footer={<SiteFooter />}
-        >
-          {children}
-        </AppChrome>
+        <Suspense fallback={<SiteHeaderFallback />}>
+          <AppChrome
+            header={
+              <Suspense fallback={<SiteHeaderFallback />}>
+                <SiteHeader />
+              </Suspense>
+            }
+            footer={<SiteFooter />}
+          >
+            {children}
+          </AppChrome>
+        </Suspense>
       </body>
     </html>
   );
