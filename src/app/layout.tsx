@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     "Instituição de ensino para formação de bombeiros civis e capacitação em NRs com cursos online.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${sans.variable} ${serif.variable} h-full`}>
