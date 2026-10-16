@@ -26,8 +26,8 @@ export function SiteFooter() {
         <div>
           <p className="font-serif text-2xl text-paper">Fire Prevenção</p>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-paper/65">
-            Segurança do trabalho e prevenção contra incêndios. Atendimento em São Paulo — SP e
-            região.
+            Segurança do trabalho e prevenção contra incêndios. Atendimento a
+            nivel Brasil.
           </p>
         </div>
         <div className="flex flex-wrap gap-5 text-sm">
