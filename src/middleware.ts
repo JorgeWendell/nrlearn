@@ -26,7 +26,10 @@ export default auth((req) => {
     }
   }
 
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  const adminPublic =
+    pathname === "/admin/login" || pathname === "/admin/primeiro-acesso";
+
+  if (pathname.startsWith("/admin") && !adminPublic) {
     if (!role) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }

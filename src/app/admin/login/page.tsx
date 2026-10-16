@@ -48,6 +48,15 @@ async function AdminLoginContent() {
           <div className="mt-6">
             {firstRun ? <BootstrapAdminForm /> : <LoginForm portal="admin" />}
           </div>
+          {firstRun ? (
+            <p className="mt-6 text-sm text-paper/60">
+              A página dedicada para criar essa conta é{" "}
+              <a href="/admin/primeiro-acesso" className="font-semibold text-gold hover:text-paper">
+                /admin/primeiro-acesso
+              </a>
+              .
+            </p>
+          ) : null}
         </div>
       </section>
 

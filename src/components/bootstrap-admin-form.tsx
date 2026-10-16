@@ -15,11 +15,11 @@ export function BootstrapAdminForm() {
     <form action={formAction} className="space-y-4">
       <label className="block text-sm">
         Nome completo
-        <input name="name" required className="mt-1" />
+        <input name="name" required defaultValue="Administrador NRLearn" className="mt-1" />
       </label>
       <label className="block text-sm">
         Email
-        <input name="email" type="email" required className="mt-1" />
+        <input name="email" type="email" required defaultValue="admin@nrlearn.local" className="mt-1" />
       </label>
       <label className="block text-sm">
         Senha
