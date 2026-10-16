@@ -65,10 +65,13 @@ export const lessons = pgTable("lessons", {
     .notNull()
     .references(() => courses.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  videoUrl: text("video_url").notNull(),
+  videoUrl: text("video_url").notNull().default(""),
   order: integer("order").notNull(),
   durationSeconds: integer("duration_seconds"),
   moduleName: text("module_name").notNull().default("Módulo 1"),
+  materialPath: text("material_path"),
+  materialName: text("material_name"),
+  materialMime: text("material_mime"),
 });
 
 export const assessments = pgTable("assessments", {

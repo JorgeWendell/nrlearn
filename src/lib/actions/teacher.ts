@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { assessments, courses, lessons, options, questions } from "@/db/schema";
 import { slugify } from "@/lib/format";
+import { removeLessonMaterial, saveLessonMaterial } from "@/lib/lesson-material";
 import { requireProfessor } from "@/lib/session";
 
 export async function upsertCourse(formData: FormData) {
@@ -83,17 +84,42 @@ export async function addLesson(formData: FormData) {
   const videoUrl = String(formData.get("videoUrl") ?? "").trim();
   const order = Number(formData.get("order") ?? 1);
   const moduleName = String(formData.get("moduleName") ?? "Módulo 1").trim() || "Módulo 1";
+  const file = formData.get("material");
 
-  if (!courseId || !title || !videoUrl) return { error: "Preencha aula, URL e ordem." };
+  if (!courseId || !title) return { error: "Preencha o título da aula." };
 
-  await db.insert(lessons).values({ courseId, title, videoUrl, order, moduleName });
+  let material: { materialPath: string; materialName: string; materialMime: string } | null = null;
+  if (file instanceof File && file.size > 0) {
+    try {
+      material = await saveLessonMaterial(file);
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Falha ao enviar o arquivo." };
+    }
+  }
+
+  if (!videoUrl && !material) {
+    return { error: "Informe a URL do vídeo ou envie um PDF/PowerPoint." };
+  }
+
+  await db.insert(lessons).values({
+    courseId,
+    title,
+    videoUrl,
+    order,
+    moduleName,
+    materialPath: material?.materialPath ?? null,
+    materialName: material?.materialName ?? null,
+    materialMime: material?.materialMime ?? null,
+  });
   revalidatePath(`/docente/cursos/${courseId}/aulas`);
   return { ok: true };
 }
 
 export async function deleteLesson(lessonId: string, courseId: string) {
   await requireProfessor();
+  const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
   await db.delete(lessons).where(eq(lessons.id, lessonId));
+  await removeLessonMaterial(lesson?.materialPath);
   revalidatePath(`/docente/cursos/${courseId}/aulas`);
 }
 

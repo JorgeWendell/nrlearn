@@ -49,6 +49,8 @@ services:
         AUTH_URL: ${AUTH_URL:-https://nrlearn.adelweb.com.br}
     container_name: nrlearn-app
     restart: unless-stopped
+    volumes:
+      - lesson_uploads:/app/uploads
     expose:
       - "3000"
     environment:
@@ -89,3 +91,4 @@ networks:
 
 volumes:
   postgres_data:
+  lesson_uploads:

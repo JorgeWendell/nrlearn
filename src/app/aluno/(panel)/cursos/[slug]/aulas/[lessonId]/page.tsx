@@ -50,6 +50,8 @@ export default async function LessonPage({
         lessonId={lesson.id}
         videoUrl={lesson.videoUrl}
         completed={completed.has(lesson.id)}
+        materialName={lesson.materialName}
+        materialMime={lesson.materialMime}
       />
     </div>
   );

@@ -49,7 +49,10 @@ async function DocenteLessons({ params }: { params: Promise<{ id: string }> }) {
                     <p className="font-medium">
                       {lesson.order}. {lesson.title}
                     </p>
-                    <p className="break-all text-xs text-muted">{lesson.videoUrl}</p>
+                    <p className="break-all text-xs text-muted">
+                      {lesson.videoUrl || "Sem vídeo"}
+                      {lesson.materialName ? ` · ${lesson.materialName}` : ""}
+                    </p>
                   </div>
                   <form
                     action={async () => {

@@ -141,10 +141,15 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
       </label>
       <label className="block text-sm">
         URL do vídeo (YouTube ou Vimeo)
+        <input name="videoUrl" className="mt-1" />
+      </label>
+      <label className="block text-sm">
+        Material (PDF, PPT ou PPTX)
         <input
-          name="videoUrl"
-          required
-          className="mt-1"
+          name="material"
+          type="file"
+          accept=".pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          className="mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white"
         />
       </label>
       <label className="block text-sm">

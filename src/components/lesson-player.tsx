@@ -27,15 +27,23 @@ export function LessonPlayer({
   lessonId,
   videoUrl,
   completed,
+  materialName,
+  materialMime,
 }: {
   lessonId: string;
   videoUrl: string;
   completed: boolean;
+  materialName?: string | null;
+  materialMime?: string | null;
 }) {
   const [done, setDone] = useState(completed);
   const saving = useRef(false);
   const youtubeId = parseYoutubeId(videoUrl);
   const vimeoId = parseVimeoId(videoUrl);
+  const hasVideo = Boolean(videoUrl);
+  const hasMaterial = Boolean(materialName);
+  const isPdf = (materialMime ?? "").includes("pdf");
+  const materialHref = `/api/lessons/${lessonId}/material`;
   const playerId = `yt-${lessonId}`;
 
   async function complete() {
@@ -95,32 +103,57 @@ export function LessonPlayer({
   }, [vimeoId]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="aspect-video w-full overflow-hidden rounded-xl bg-black [&_iframe]:h-full [&_iframe]:w-full">
-        {youtubeId ? (
-          <div id={playerId} className="h-full w-full" />
-        ) : vimeoId ? (
-          <iframe
-            className="h-full w-full"
-            src={`https://player.vimeo.com/video/${vimeoId}?api=1`}
-            allow="autoplay; fullscreen"
-            allowFullScreen
-          />
-        ) : (
-          <video
-            className="h-full w-full"
-            src={videoUrl}
-            controls
-            onEnded={() => void complete()}
-          />
-        )}
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {hasVideo ? (
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black [&_iframe]:h-full [&_iframe]:w-full">
+          {youtubeId ? (
+            <div id={playerId} className="h-full w-full" />
+          ) : vimeoId ? (
+            <iframe
+              className="h-full w-full"
+              src={`https://player.vimeo.com/video/${vimeoId}?api=1`}
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <video className="h-full w-full" src={videoUrl} controls onEnded={() => void complete()} />
+          )}
+        </div>
+      ) : null}
+
+      {hasMaterial ? (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <p className="text-sm font-medium">{materialName}</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <a
+              href={materialHref}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg bg-[#a855f7] px-4 py-2 text-sm font-semibold hover:bg-[#c084fc]"
+            >
+              {isPdf ? "Abrir PDF" : "Baixar apresentação"}
+            </a>
+          </div>
+          {isPdf ? (
+            <iframe title={materialName ?? "PDF"} src={materialHref} className="mt-4 h-[70vh] w-full rounded-lg bg-white" />
+          ) : null}
+        </div>
+      ) : null}
+
       {done ? (
         <p className="inline-flex rounded-full bg-emerald-700 px-3 py-1 text-sm font-semibold text-white">
           Concluído
         </p>
-      ) : (
+      ) : hasVideo ? (
         <p className="text-sm text-muted">Assista até o fim para marcar como concluído.</p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void complete()}
+          className="self-start rounded-lg bg-[#a855f7] px-4 py-2 text-sm font-semibold hover:bg-[#c084fc]"
+        >
+          Marcar como concluído
+        </button>
       )}
     </div>
   );
