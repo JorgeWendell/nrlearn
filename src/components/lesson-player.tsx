@@ -120,11 +120,13 @@ export function LessonPlayer({
       ) : null}
 
       {hasMaterial ? (
-        <iframe
-          title="Material da aula"
-          src={materialHref}
-          className="h-[70vh] w-full rounded-xl bg-white"
-        />
+        <div className="relative h-[70vh] overflow-hidden rounded-xl bg-white">
+          <iframe
+            title="Material da aula"
+            src={`${materialHref}#toolbar=0&navpanes=0&scrollbar=0`}
+            className="absolute -top-12 h-[calc(70vh+3rem)] w-full border-0"
+          />
+        </div>
       ) : null}
 
       {done ? (
