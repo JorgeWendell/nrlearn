@@ -28,7 +28,6 @@ export function LessonPlayer({
   videoUrl,
   completed,
   materialName,
-  materialMime,
 }: {
   lessonId: string;
   videoUrl: string;
@@ -42,7 +41,6 @@ export function LessonPlayer({
   const vimeoId = parseVimeoId(videoUrl);
   const hasVideo = Boolean(videoUrl);
   const hasMaterial = Boolean(materialName);
-  const isPdf = (materialMime ?? "").includes("pdf");
   const materialHref = `/api/lessons/${lessonId}/material`;
   const playerId = `yt-${lessonId}`;
 
@@ -122,22 +120,11 @@ export function LessonPlayer({
       ) : null}
 
       {hasMaterial ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <p className="text-sm font-medium">{materialName}</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <a
-              href={materialHref}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg bg-[#a855f7] px-4 py-2 text-sm font-semibold hover:bg-[#c084fc]"
-            >
-              {isPdf ? "Abrir PDF" : "Baixar apresentação"}
-            </a>
-          </div>
-          {isPdf ? (
-            <iframe title={materialName ?? "PDF"} src={materialHref} className="mt-4 h-[70vh] w-full rounded-lg bg-white" />
-          ) : null}
-        </div>
+        <iframe
+          title="Material da aula"
+          src={materialHref}
+          className="h-[70vh] w-full rounded-xl bg-white"
+        />
       ) : null}
 
       {done ? (
