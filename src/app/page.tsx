@@ -230,7 +230,7 @@ export default async function HomePage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ember">Contato</p>
             <h2 className="mt-2 font-serif text-3xl">Fale com a Fire Prevenção</h2>
-            <p className="mt-3 text-sm text-paper/65">Atendimento em São Paulo — SP e região.</p>
+            <p className="mt-3 text-sm text-paper/65">Atendimento A nivel Brasil.</p>
           </div>
           <div className="space-y-3 text-sm">
             <a
