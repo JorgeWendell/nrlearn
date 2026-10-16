@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { eq } from "drizzle-orm";
+import { DeleteCourseButton } from "@/components/delete-course-button";
 import { DocenteShell } from "@/components/docente-shell";
 import { CourseEditorForm } from "@/components/teacher-forms";
 import { db } from "@/db";
@@ -42,6 +43,15 @@ async function DocenteCourse({ params }: { params: Promise<{ id: string }> }) {
         <div className="mt-6">
           <CourseEditorForm course={course} />
         </div>
+      </section>
+      <section className="card mt-6 flex flex-wrap items-center justify-between gap-4 p-6">
+        <div>
+          <h2 className="font-serif text-xl">Excluir curso</h2>
+          <p className="mt-1 text-sm text-muted">
+            Remove o curso, aulas, arquivos, avaliações e matrículas. Esta ação não pode ser desfeita.
+          </p>
+        </div>
+        <DeleteCourseButton courseId={course.id} title={course.title} />
       </section>
     </DocenteShell>
   );

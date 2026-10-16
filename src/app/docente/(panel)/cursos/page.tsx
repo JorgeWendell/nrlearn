@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
+import { DeleteCourseButton } from "@/components/delete-course-button";
 import { DocenteShell } from "@/components/docente-shell";
 import { db } from "@/db";
 import { courses } from "@/db/schema";
@@ -23,13 +24,16 @@ export default async function DocenteCursosPage() {
         ) : (
           <ul className="space-y-3">
             {list.map((course) => (
-              <li key={course.id} className="border-b border-navy/10 pb-3 last:border-0">
-                <Link href={`/docente/cursos/${course.id}`} className="font-medium hover:text-ember">
-                  {course.title}
-                </Link>
-                <p className="text-sm text-muted">
-                  {course.published ? "Publicado" : "Rascunho"} · {formatBRL(course.price)}
-                </p>
+              <li key={course.id} className="flex items-start justify-between gap-3 border-b border-navy/10 pb-3 last:border-0">
+                <div>
+                  <Link href={`/docente/cursos/${course.id}`} className="font-medium hover:text-ember">
+                    {course.title}
+                  </Link>
+                  <p className="text-sm text-muted">
+                    {course.published ? "Publicado" : "Rascunho"} · {formatBRL(course.price)}
+                  </p>
+                </div>
+                <DeleteCourseButton courseId={course.id} title={course.title} />
               </li>
             ))}
           </ul>

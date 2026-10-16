@@ -115,6 +115,26 @@ export async function addLesson(formData: FormData) {
   return { ok: true };
 }
 
+export async function deleteCourse(courseId: string) {
+  await requireProfessor();
+  if (!courseId) return { error: "Curso inválido." };
+
+  const [course] = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1);
+  if (!course) return { error: "Curso não encontrado." };
+
+  const courseLessons = await db.select().from(lessons).where(eq(lessons.courseId, courseId));
+  await Promise.all(courseLessons.map((lesson) => removeLessonMaterial(lesson.materialPath)));
+
+  await db.delete(courses).where(eq(courses.id, courseId));
+
+  revalidatePath("/docente");
+  revalidatePath("/docente/cursos");
+  revalidatePath("/cursos");
+  revalidatePath("/aluno/cursos");
+  revalidatePath("/admin");
+  redirect("/docente/cursos");
+}
+
 export async function deleteLesson(lessonId: string, courseId: string) {
   await requireProfessor();
   const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
