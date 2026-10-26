@@ -12,7 +12,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG AUTH_URL=https://nrlearn.adelweb.com.br
+ARG AUTH_URL=https://fireprevencao.adelweb.com.br
 ENV AUTH_URL=$AUTH_URL
 ENV AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
 ENV NEXT_TELEMETRY_DISABLED=1

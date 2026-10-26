@@ -46,7 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        AUTH_URL: ${AUTH_URL:-https://nrlearn.adelweb.com.br}
+        AUTH_URL: ${AUTH_URL:-https://fireprevencao.adelweb.com.br}
     container_name: nrlearn-app
     restart: unless-stopped
     volumes:
@@ -57,7 +57,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-nrlearn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nrlearn}
       AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET no .env}
-      AUTH_URL: ${AUTH_URL:-https://nrlearn.adelweb.com.br}
+      AUTH_URL: ${AUTH_URL:-https://fireprevencao.adelweb.com.br}
       AUTH_TRUST_HOST: "true"
     depends_on:
       db:
@@ -70,13 +70,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=${TRAEFIK_NETWORK:-proxy}
-      - traefik.http.routers.nrlearn.rule=Host(`${APP_DOMAIN:-nrlearn.adelweb.com.br}`)
+      - traefik.http.routers.nrlearn.rule=Host(`${APP_DOMAIN:-fireprevencao.adelweb.com.br}`)
       - traefik.http.routers.nrlearn.entrypoints=websecure
       - traefik.http.routers.nrlearn.tls=true
       - traefik.http.routers.nrlearn.tls.certresolver=letsencrypt
       - traefik.http.routers.nrlearn.service=nrlearn
       - traefik.http.services.nrlearn.loadbalancer.server.port=3000
-      - traefik.http.routers.nrlearn-http.rule=Host(`${APP_DOMAIN:-nrlearn.adelweb.com.br}`)
+      - traefik.http.routers.nrlearn-http.rule=Host(`${APP_DOMAIN:-fireprevencao.adelweb.com.br}`)
       - traefik.http.routers.nrlearn-http.entrypoints=web
       - traefik.http.routers.nrlearn-http.middlewares=nrlearn-https-redirect
       - traefik.http.middlewares.nrlearn-https-redirect.redirectscheme.scheme=https
