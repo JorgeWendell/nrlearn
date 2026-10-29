@@ -4,6 +4,7 @@ import { LessonPlayer } from "@/components/lesson-player";
 import { db } from "@/db";
 import { courses, enrollments, lessonProgress, lessons } from "@/db/schema";
 import { isLessonUnlocked } from "@/lib/lesson-unlock";
+import { isOfficeMaterial, isPdfMaterial, signMaterialToken } from "@/lib/material-token";
 import { requireAluno } from "@/lib/session";
 
 export default async function LessonPage({
@@ -43,6 +44,12 @@ export default async function LessonPage({
     redirect(`/aluno/cursos/${slug}`);
   }
 
+  const origin = (process.env.AUTH_URL ?? "").replace(/\/$/, "");
+  const token = signMaterialToken(lesson.id);
+  const materialFileUrl = origin
+    ? `${origin}/api/lessons/${lesson.id}/material?t=${token}`
+    : `/api/lessons/${lesson.id}/material?t=${token}`;
+
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col p-6">
       <h1 className="mb-3 shrink-0 text-lg font-semibold">{lesson.title}</h1>
@@ -52,6 +59,16 @@ export default async function LessonPage({
         completed={completed.has(lesson.id)}
         materialName={lesson.materialName}
         materialMime={lesson.materialMime}
+        materialFileUrl={materialFileUrl}
+        materialKind={
+          isPdfMaterial(lesson.materialMime, lesson.materialName)
+            ? "pdf"
+            : isOfficeMaterial(lesson.materialMime, lesson.materialName)
+              ? "office"
+              : lesson.materialName
+                ? "file"
+                : null
+        }
       />
     </div>
   );

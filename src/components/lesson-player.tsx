@@ -28,12 +28,16 @@ export function LessonPlayer({
   videoUrl,
   completed,
   materialName,
+  materialFileUrl,
+  materialKind,
 }: {
   lessonId: string;
   videoUrl: string;
   completed: boolean;
   materialName?: string | null;
   materialMime?: string | null;
+  materialFileUrl?: string | null;
+  materialKind?: "pdf" | "office" | "file" | null;
 }) {
   const [done, setDone] = useState(completed);
   const saving = useRef(false);
@@ -41,7 +45,8 @@ export function LessonPlayer({
   const vimeoId = parseVimeoId(videoUrl);
   const hasVideo = Boolean(videoUrl);
   const hasMaterial = Boolean(materialName);
-  const materialHref = `/api/lessons/${lessonId}/material`;
+  const materialHref = materialFileUrl ?? `/api/lessons/${lessonId}/material`;
+  const officeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(materialHref)}`;
   const playerId = `yt-${lessonId}`;
 
   async function complete() {
@@ -122,8 +127,13 @@ export function LessonPlayer({
       {hasMaterial ? (
         <iframe
           title="Material da aula"
-          src={`${materialHref}#toolbar=0&navpanes=0`}
+          src={
+            materialKind === "office"
+              ? officeSrc
+              : `${materialHref}${materialHref.includes("#") ? "" : "#toolbar=0&navpanes=0"}`
+          }
           className="h-[70vh] w-full rounded-xl border-0 bg-white"
+          allow="fullscreen"
         />
       ) : null}
 
