@@ -127,9 +127,17 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
     setError(null);
     setPending(true);
     try {
+      const form = event.currentTarget;
+      const fileInput = form.querySelector<HTMLInputElement>('input[name="material"]');
+      const file = fileInput?.files?.[0];
+      if (file && file.size > 250 * 1024 * 1024) {
+        setError("O arquivo deve ter no máximo 250 MB.");
+        setPending(false);
+        return;
+      }
       const response = await fetch("/api/docente/lessons", {
         method: "POST",
-        body: new FormData(event.currentTarget),
+        body: new FormData(form),
       });
       const data = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
       if (!response.ok || data?.error) {
@@ -164,7 +172,7 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
         <input name="videoUrl" className="mt-1" />
       </label>
       <label className="block text-sm">
-        Material (PDF, PPT ou PPTX)
+        Material (PDF, PPT ou PPTX, até 250 MB)
         <input
           name="material"
           type="file"

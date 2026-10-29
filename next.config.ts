@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   agentRules: false,
   experimental: {
     serverActions: {
-      bodySizeLimit: "50mb",
+      bodySizeLimit: "260mb",
     },
   },
   turbopack: {

@@ -1,8 +1,11 @@
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { pipeline } from "node:stream/promises";
+import { Readable } from "node:stream";
 
-const MAX_BYTES = 40 * 1024 * 1024;
+const MAX_BYTES = 250 * 1024 * 1024;
 
 const allowed: Record<string, string[]> = {
   "application/pdf": [".pdf"],
@@ -11,8 +14,7 @@ const allowed: Record<string, string[]> = {
 };
 
 function extOf(name: string) {
-  const ext = path.extname(name).toLowerCase();
-  return ext;
+  return path.extname(name).toLowerCase();
 }
 
 export function uploadsDir() {
@@ -26,29 +28,30 @@ export function materialDiskPath(storedName: string) {
 export async function saveLessonMaterial(file: File) {
   if (file.size === 0) return null;
   if (file.size > MAX_BYTES) {
-    throw new Error("O arquivo deve ter no máximo 40 MB.");
+    throw new Error("O arquivo deve ter no máximo 250 MB.");
   }
 
   const ext = extOf(file.name);
   const mime = (file.type || "").toLowerCase();
   const extOk = [".pdf", ".ppt", ".pptx"].includes(ext);
-  const mimeOk = mime in allowed || mime === "application/octet-stream";
-  if (!extOk && !mimeOk) {
-    throw new Error("Envie apenas PDF, PPT ou PPTX.");
-  }
   if (!extOk) {
     throw new Error("Envie apenas PDF, PPT ou PPTX.");
   }
 
   const storedName = `${randomUUID()}${ext}`;
   await mkdir(uploadsDir(), { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(materialDiskPath(storedName), buffer);
+  const dest = materialDiskPath(storedName);
+  const nodeStream = Readable.fromWeb(file.stream() as Parameters<typeof Readable.fromWeb>[0]);
+  await pipeline(nodeStream, createWriteStream(dest));
 
   const resolvedMime =
-    mime && allowed[mime] ? mime : ext === ".pdf" ? "application/pdf" : ext === ".ppt"
-      ? "application/vnd.ms-powerpoint"
-      : "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    mime && allowed[mime]
+      ? mime
+      : ext === ".pdf"
+        ? "application/pdf"
+        : ext === ".ppt"
+          ? "application/vnd.ms-powerpoint"
+          : "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 
   return {
     materialPath: storedName,
