@@ -4,8 +4,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["pg"],
   agentRules: false,
-  serverActions: {
-    bodySizeLimit: "50mb",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "50mb",
+    },
   },
   turbopack: {
     rules: {
