@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const EMAIL = "fire.treinamentos.prevencao@gmail.com";
-const WHATSAPP = "11939601643";
-const WHATSAPP_DISPLAY = "11 93960-1643";
+const WHATSAPP = "11939601643 | 11 91290-6754";
+const WHATSAPP_DISPLAY = "11 93960-1643 | 11 91290-6754";
 
 export function SiteFooter() {
   return (
