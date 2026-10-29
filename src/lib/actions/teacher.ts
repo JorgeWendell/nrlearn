@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { assessments, courses, lessons, options, questions } from "@/db/schema";
 import { slugify } from "@/lib/format";
 import { removeLessonMaterial, saveLessonMaterial } from "@/lib/lesson-material";
+import { isUploadedFile } from "@/lib/lesson-upload";
 import { requireProfessor } from "@/lib/session";
 
 export async function upsertCourse(formData: FormData) {
@@ -78,41 +79,42 @@ export async function upsertCourse(formData: FormData) {
 }
 
 export async function addLesson(formData: FormData) {
-  await requireProfessor();
-  const courseId = String(formData.get("courseId") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
-  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
-  const order = Number(formData.get("order") ?? 1);
-  const moduleName = String(formData.get("moduleName") ?? "Módulo 1").trim() || "Módulo 1";
-  const file = formData.get("material");
+  try {
+    await requireProfessor();
+    const courseId = String(formData.get("courseId") ?? "");
+    const title = String(formData.get("title") ?? "").trim();
+    const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+    const order = Number(formData.get("order") ?? 1);
+    const moduleName = String(formData.get("moduleName") ?? "Módulo 1").trim() || "Módulo 1";
+    const file = formData.get("material");
 
-  if (!courseId || !title) return { error: "Preencha o título da aula." };
+    if (!courseId || !title) return { error: "Preencha o título da aula." };
 
-  let material: { materialPath: string; materialName: string; materialMime: string } | null = null;
-  if (file instanceof File && file.size > 0) {
-    try {
+    let material: { materialPath: string; materialName: string; materialMime: string } | null = null;
+    if (isUploadedFile(file)) {
       material = await saveLessonMaterial(file);
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : "Falha ao enviar o arquivo." };
     }
-  }
 
-  if (!videoUrl && !material) {
-    return { error: "Informe a URL do vídeo ou envie um PDF/PowerPoint." };
-  }
+    if (!videoUrl && !material) {
+      return { error: "Informe a URL do vídeo ou envie um PDF/PowerPoint." };
+    }
 
-  await db.insert(lessons).values({
-    courseId,
-    title,
-    videoUrl,
-    order,
-    moduleName,
-    materialPath: material?.materialPath ?? null,
-    materialName: material?.materialName ?? null,
-    materialMime: material?.materialMime ?? null,
-  });
-  revalidatePath(`/docente/cursos/${courseId}/aulas`);
-  return { ok: true };
+    await db.insert(lessons).values({
+      courseId,
+      title,
+      videoUrl,
+      order: Number.isFinite(order) ? order : 1,
+      moduleName,
+      materialPath: material?.materialPath ?? null,
+      materialName: material?.materialName ?? null,
+      materialMime: material?.materialMime ?? null,
+    });
+    revalidatePath(`/docente/cursos/${courseId}/aulas`);
+    return { ok: true };
+  } catch (error) {
+    console.error("addLesson", error);
+    return { error: error instanceof Error ? error.message : "Falha ao salvar a aula." };
+  }
 }
 
 export async function deleteCourse(courseId: string) {

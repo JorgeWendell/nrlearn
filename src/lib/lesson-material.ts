@@ -30,12 +30,13 @@ export async function saveLessonMaterial(file: File) {
   }
 
   const ext = extOf(file.name);
-  const mime = file.type || "";
-  const mimeOk = Object.entries(allowed).some(
-    ([type, exts]) => (mime === type || mime === "") && exts.includes(ext),
-  );
+  const mime = (file.type || "").toLowerCase();
   const extOk = [".pdf", ".ppt", ".pptx"].includes(ext);
-  if (!mimeOk && !extOk) {
+  const mimeOk = mime in allowed || mime === "application/octet-stream";
+  if (!extOk && !mimeOk) {
+    throw new Error("Envie apenas PDF, PPT ou PPTX.");
+  }
+  if (!extOk) {
     throw new Error("Envie apenas PDF, PPT ou PPTX.");
   }
 

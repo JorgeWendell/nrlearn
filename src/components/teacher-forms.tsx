@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { addAssessment, addLesson, addQuestion, upsertCourse } from "@/lib/actions/teacher";
+import { useActionState, useState, type FormEvent } from "react";
+import { addAssessment, addQuestion, upsertCourse } from "@/lib/actions/teacher";
 import { toActionState, type ActionState } from "@/lib/form-state";
 
 export function CourseEditorForm({
@@ -119,13 +119,33 @@ export function CourseEditorForm({
 }
 
 export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; nextOrder: number }) {
-  const [state, formAction, pending] = useActionState(
-    async (_prev: ActionState, formData: FormData) => toActionState(await addLesson(formData)),
-    null,
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const response = await fetch("/api/docente/lessons", {
+        method: "POST",
+        body: new FormData(event.currentTarget),
+      });
+      const data = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
+      if (!response.ok || data?.error) {
+        setError(data?.error ?? "Não foi possível adicionar a aula. Tente um arquivo menor.");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setError("Falha de rede ao enviar o arquivo.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <input type="hidden" name="courseId" value={courseId} />
       <label className="block text-sm">
         Módulo
@@ -162,7 +182,7 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
           className="mt-1"
         />
       </label>
-      {state?.error ? <p className="text-sm text-ember">{state.error}</p> : null}
+      {error ? <p className="text-sm text-ember">{error}</p> : null}
       <button
         disabled={pending}
         className="btn btn-primary"
