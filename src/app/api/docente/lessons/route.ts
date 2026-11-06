@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { lessons } from "@/db/schema";
-import { saveLessonMaterial } from "@/lib/lesson-material";
+import { assembleLessonUpload, saveLessonMaterial } from "@/lib/lesson-material";
 import { isUploadedFile } from "@/lib/lesson-upload";
 import { getSession } from "@/lib/session";
 
@@ -28,8 +28,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Preencha o título da aula." }, { status: 400 });
     }
 
+    const uploadId = String(formData.get("uploadId") ?? "").trim();
+    const materialName = String(formData.get("materialName") ?? "").trim();
+
     let material: { materialPath: string; materialName: string; materialMime: string } | null = null;
-    if (isUploadedFile(file)) {
+    if (uploadId && materialName) {
+      material = await assembleLessonUpload(uploadId, materialName);
+    } else if (isUploadedFile(file)) {
       material = await saveLessonMaterial(file);
     }
 

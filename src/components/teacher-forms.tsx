@@ -118,18 +118,23 @@ export function CourseEditorForm({
   );
 }
 
-function uploadLesson(
-  form: HTMLFormElement,
-  onProgress: (percent: number, loaded: number, total: number) => void,
+const CHUNK_BYTES = 4 * 1024 * 1024;
+
+function postForm(
+  url: string,
+  body: FormData,
+  onProgress?: (loaded: number, total: number) => void,
 ) {
   return new Promise<{ ok?: boolean; error?: string }>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/docente/lessons");
-    xhr.timeout = 15 * 60 * 1000;
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable || event.total <= 0) return;
-      onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)), event.loaded, event.total);
-    };
+    xhr.open("POST", url);
+    xhr.timeout = 10 * 60 * 1000;
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable || event.total <= 0) return;
+        onProgress(event.loaded, event.total);
+      };
+    }
     xhr.onload = () => {
       try {
         const data = JSON.parse(xhr.responseText) as { ok?: boolean; error?: string };
@@ -144,8 +149,45 @@ function uploadLesson(
     };
     xhr.onerror = () => reject(new Error("network"));
     xhr.ontimeout = () => reject(new Error("timeout"));
-    xhr.send(new FormData(form));
+    xhr.send(body);
   });
+}
+
+async function uploadLesson(
+  form: HTMLFormElement,
+  file: File | undefined,
+  onProgress: (percent: number, loaded: number, total: number) => void,
+) {
+  const body = new FormData(form);
+  body.delete("material");
+
+  if (!file) {
+    return postForm("/api/docente/lessons", body);
+  }
+
+  const uploadId = crypto.randomUUID();
+  const totalChunks = Math.ceil(file.size / CHUNK_BYTES);
+  for (let index = 0; index < totalChunks; index += 1) {
+    const start = index * CHUNK_BYTES;
+    const blob = file.slice(start, start + CHUNK_BYTES);
+    const chunk = new FormData();
+    chunk.set("uploadId", uploadId);
+    chunk.set("index", String(index));
+    chunk.set("total", String(totalChunks));
+    chunk.set("filename", file.name);
+    chunk.set("chunk", blob, file.name);
+    const result = await postForm("/api/docente/lessons/chunk", chunk, (loaded, total) => {
+      const sent = start + loaded;
+      const overall = Math.min(file.size, total > 0 ? sent : start);
+      onProgress(Math.min(99, Math.round((overall / file.size) * 100)), overall, file.size);
+    });
+    if (result.error) return result;
+  }
+
+  onProgress(99, file.size, file.size);
+  body.set("uploadId", uploadId);
+  body.set("materialName", file.name);
+  return postForm("/api/docente/lessons", body);
 }
 
 function formatMb(bytes: number) {
@@ -176,7 +218,10 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
         setProgress(null);
         return;
       }
-      const data = await uploadLesson(form, (percent, loaded, total) => {
+      if (file) {
+        setTotalBytes(file.size);
+      }
+      const data = await uploadLesson(form, file, (percent, loaded, total) => {
         setProgress(percent);
         setLoadedBytes(loaded);
         setTotalBytes(total);
