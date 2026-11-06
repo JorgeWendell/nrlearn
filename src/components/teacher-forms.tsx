@@ -1,8 +1,73 @@
 "use client";
 
 import { useActionState, useState, type FormEvent } from "react";
-import { addAssessment, addQuestion, upsertCourse } from "@/lib/actions/teacher";
+import { addAssessment, addQuestion } from "@/lib/actions/teacher";
 import { toActionState, type ActionState } from "@/lib/form-state";
+
+const CHUNK_BYTES = 4 * 1024 * 1024;
+const MAX_COVER_BYTES = 20 * 1024 * 1024;
+
+type UploadResult = { ok?: boolean; error?: string; id?: string };
+
+function postForm(
+  url: string,
+  body: FormData,
+  onProgress?: (loaded: number, total: number) => void,
+) {
+  return new Promise<UploadResult>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.timeout = 10 * 60 * 1000;
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable || event.total <= 0) return;
+        onProgress(event.loaded, event.total);
+      };
+    }
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText) as UploadResult;
+        if (xhr.status >= 400) {
+          resolve({ error: data.error ?? `Falha no envio (${xhr.status}).` });
+          return;
+        }
+        resolve(data);
+      } catch {
+        resolve({ error: `Falha no envio (${xhr.status}).` });
+      }
+    };
+    xhr.onerror = () => reject(new Error("network"));
+    xhr.ontimeout = () => reject(new Error("timeout"));
+    xhr.send(body);
+  });
+}
+
+async function uploadFileInChunks(
+  file: File,
+  chunkUrl: string,
+  onProgress: (percent: number, loaded: number, total: number) => void,
+) {
+  const uploadId = crypto.randomUUID();
+  const totalChunks = Math.ceil(file.size / CHUNK_BYTES);
+  for (let index = 0; index < totalChunks; index += 1) {
+    const start = index * CHUNK_BYTES;
+    const blob = file.slice(start, start + CHUNK_BYTES);
+    const chunk = new FormData();
+    chunk.set("uploadId", uploadId);
+    chunk.set("index", String(index));
+    chunk.set("total", String(totalChunks));
+    chunk.set("filename", file.name);
+    chunk.set("chunk", blob, file.name);
+    const result = await postForm(chunkUrl, chunk, (loaded, total) => {
+      const sent = start + loaded;
+      const overall = Math.min(file.size, total > 0 ? sent : start);
+      onProgress(Math.min(99, Math.round((overall / file.size) * 100)), overall, file.size);
+    });
+    if (result.error) return { error: result.error };
+  }
+  onProgress(99, file.size, file.size);
+  return { uploadId };
+}
 
 export function CourseEditorForm({
   course,
@@ -21,13 +86,73 @@ export function CourseEditorForm({
     prerequisites?: string | null;
   };
 }) {
-  const [state, formAction, pending] = useActionState(
-    async (_prev: ActionState, formData: FormData) => toActionState(await upsertCourse(formData)),
-    null,
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [loadedBytes, setLoadedBytes] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+    setProgress(null);
+    setLoadedBytes(0);
+    setTotalBytes(0);
+    try {
+      const form = event.currentTarget;
+      const fileInput = form.querySelector<HTMLInputElement>('input[name="cover"]');
+      const file = fileInput?.files?.[0];
+      if (file && file.size > MAX_COVER_BYTES) {
+        setError("A capa deve ter no máximo 20 MB.");
+        setPending(false);
+        return;
+      }
+
+      const body = new FormData(form);
+      body.delete("cover");
+
+      if (file) {
+        setTotalBytes(file.size);
+        setProgress(0);
+        const uploaded = await uploadFileInChunks(file, "/api/docente/covers/chunk", (percent, loaded, total) => {
+          setProgress(percent);
+          setLoadedBytes(loaded);
+          setTotalBytes(total);
+        });
+        if ("error" in uploaded && uploaded.error) {
+          setError(uploaded.error);
+          return;
+        }
+        if ("uploadId" in uploaded && uploaded.uploadId) {
+          body.set("coverUploadId", uploaded.uploadId);
+          body.set("coverName", file.name);
+        }
+      }
+
+      const data = await postForm("/api/docente/courses", body);
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+      if (!course && data.id) {
+        window.location.href = `/docente/cursos/${data.id}`;
+        return;
+      }
+      window.location.reload();
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === "timeout"
+          ? "O envio demorou demais. Tente novamente."
+          : "Falha de rede ao enviar a capa.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       {course ? <input type="hidden" name="id" value={course.id} /> : null}
       <label className="block text-sm">
         Título
@@ -86,9 +211,20 @@ export function CourseEditorForm({
         </label>
       </div>
       <label className="block text-sm">
-        Capa (URL da imagem)
-        <input name="coverUrl" defaultValue={course?.coverUrl ?? ""} className="mt-1" />
+        Capa (JPG, PNG, WEBP ou GIF, até 20 MB)
+        <input
+          name="cover"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+          className="mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white"
+        />
       </label>
+      {course?.coverUrl ? (
+        <div className="overflow-hidden rounded-xl border border-white/10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={course.coverUrl} alt="Capa atual" className="h-40 w-full object-cover" />
+        </div>
+      ) : null}
       <label className="block text-sm">
         Pré-requisitos
         <textarea
@@ -106,51 +242,33 @@ export function CourseEditorForm({
         <input name="featured" type="checkbox" defaultChecked={course?.featured} />
         Destacar no topo da área do aluno
       </label>
-      {state?.error ? <p className="text-sm text-ember">{state.error}</p> : null}
-      {state?.ok ? <p className="text-sm text-navy">Curso salvo.</p> : null}
-      <button
-        disabled={pending}
-        className="btn btn-navy"
-      >
-        {pending ? "Salvando..." : course ? "Salvar curso" : "Criar curso"}
-      </button>
+      {error ? <p className="text-sm text-ember">{error}</p> : null}
+      <div className="flex flex-wrap items-center gap-3">
+        <button disabled={pending} className="btn btn-navy">
+          {pending
+            ? progress !== null && progress < 100
+              ? `Enviando capa... ${progress}%`
+              : "Salvando..."
+            : course
+              ? "Salvar curso"
+              : "Criar curso"}
+        </button>
+        {pending && totalBytes > 0 ? (
+          <span className="text-sm text-white/60">
+            {formatMb(loadedBytes)} de {formatMb(totalBytes)}
+          </span>
+        ) : null}
+      </div>
+      {pending && progress !== null ? (
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-[#a855f7] transition-[width] duration-150"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      ) : null}
     </form>
   );
-}
-
-const CHUNK_BYTES = 4 * 1024 * 1024;
-
-function postForm(
-  url: string,
-  body: FormData,
-  onProgress?: (loaded: number, total: number) => void,
-) {
-  return new Promise<{ ok?: boolean; error?: string }>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.timeout = 10 * 60 * 1000;
-    if (onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable || event.total <= 0) return;
-        onProgress(event.loaded, event.total);
-      };
-    }
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText) as { ok?: boolean; error?: string };
-        if (xhr.status >= 400) {
-          resolve({ error: data.error ?? `Falha no envio (${xhr.status}).` });
-          return;
-        }
-        resolve(data);
-      } catch {
-        resolve({ error: `Falha no envio (${xhr.status}).` });
-      }
-    };
-    xhr.onerror = () => reject(new Error("network"));
-    xhr.ontimeout = () => reject(new Error("timeout"));
-    xhr.send(body);
-  });
 }
 
 async function uploadLesson(
@@ -165,27 +283,12 @@ async function uploadLesson(
     return postForm("/api/docente/lessons", body);
   }
 
-  const uploadId = crypto.randomUUID();
-  const totalChunks = Math.ceil(file.size / CHUNK_BYTES);
-  for (let index = 0; index < totalChunks; index += 1) {
-    const start = index * CHUNK_BYTES;
-    const blob = file.slice(start, start + CHUNK_BYTES);
-    const chunk = new FormData();
-    chunk.set("uploadId", uploadId);
-    chunk.set("index", String(index));
-    chunk.set("total", String(totalChunks));
-    chunk.set("filename", file.name);
-    chunk.set("chunk", blob, file.name);
-    const result = await postForm("/api/docente/lessons/chunk", chunk, (loaded, total) => {
-      const sent = start + loaded;
-      const overall = Math.min(file.size, total > 0 ? sent : start);
-      onProgress(Math.min(99, Math.round((overall / file.size) * 100)), overall, file.size);
-    });
-    if (result.error) return result;
+  const uploaded = await uploadFileInChunks(file, "/api/docente/lessons/chunk", onProgress);
+  if ("error" in uploaded && uploaded.error) return { error: uploaded.error };
+  if (!("uploadId" in uploaded) || !uploaded.uploadId) {
+    return { error: "Falha ao enviar o arquivo." };
   }
-
-  onProgress(99, file.size, file.size);
-  body.set("uploadId", uploadId);
+  body.set("uploadId", uploaded.uploadId);
   body.set("materialName", file.name);
   return postForm("/api/docente/lessons", body);
 }

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { assessments, courses, lessons, options, questions } from "@/db/schema";
 import { slugify } from "@/lib/format";
+import { removeCourseCover } from "@/lib/course-cover";
 import { removeLessonMaterial, saveLessonMaterial } from "@/lib/lesson-material";
 import { isUploadedFile } from "@/lib/lesson-upload";
 import { requireProfessor } from "@/lib/session";
@@ -126,6 +127,7 @@ export async function deleteCourse(courseId: string) {
 
   const courseLessons = await db.select().from(lessons).where(eq(lessons.courseId, courseId));
   await Promise.all(courseLessons.map((lesson) => removeLessonMaterial(lesson.materialPath)));
+  await removeCourseCover(course.coverUrl);
 
   await db.delete(courses).where(eq(courses.id, courseId));
 
