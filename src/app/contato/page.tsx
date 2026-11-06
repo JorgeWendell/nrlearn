@@ -1,6 +1,5 @@
-const EMAIL = "fire.treinamentos.prevencao@gmail.com";
-const WHATSAPP = "11939601643";
-const WHATSAPP_DISPLAY = "11 93960-1643";
+import { WhatsAppLinks } from "@/components/whatsapp-links";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export default function ContatoPage() {
   return (
@@ -13,20 +12,13 @@ export default function ContatoPage() {
           <p>
             <span className="text-xs uppercase tracking-[0.16em] text-paper/45">WhatsApp</span>
             <br />
-            <a
-              href={`https://wa.me/55${WHATSAPP}`}
-              className="font-semibold text-gold"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {WHATSAPP_DISPLAY}
-            </a>
+            <WhatsAppLinks stacked className="font-semibold text-gold hover:text-paper" />
           </p>
           <p>
             <span className="text-xs uppercase tracking-[0.16em] text-paper/45">E-mail</span>
             <br />
-            <a href={`mailto:${EMAIL}`} className="text-paper">
-              {EMAIL}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-paper">
+              {CONTACT_EMAIL}
             </a>
           </p>
           <p>

@@ -1,8 +1,6 @@
 import { AlunoAccessTabs } from "@/components/aluno-access-tabs";
-
-const WHATSAPP = "11939601643";
-const WHATSAPP_DISPLAY = "11 93960-1643";
-const EMAIL = "fire.treinamentos.prevencao@gmail.com";
+import { WhatsAppLinks } from "@/components/whatsapp-links";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export default function LoginPage() {
   return (
@@ -47,16 +45,9 @@ export default function LoginPage() {
             <p className="mt-3 text-sm text-paper/65">Atendimento em São Paulo — SP e região.</p>
           </div>
           <div className="space-y-3 text-sm">
-            <a
-              href={`https://wa.me/55${WHATSAPP}`}
-              className="block font-semibold text-gold hover:text-paper"
-              target="_blank"
-              rel="noreferrer"
-            >
-              WhatsApp {WHATSAPP_DISPLAY}
-            </a>
-            <a href={`mailto:${EMAIL}`} className="block text-paper/80 hover:text-gold">
-              {EMAIL}
+            <WhatsAppLinks stacked className="block font-semibold text-gold hover:text-paper" />
+            <a href={`mailto:${CONTACT_EMAIL}`} className="block text-paper/80 hover:text-gold">
+              {CONTACT_EMAIL}
             </a>
           </div>
         </div>

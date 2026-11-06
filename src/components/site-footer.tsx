@@ -1,24 +1,15 @@
 import Link from "next/link";
-
-const EMAIL = "fire.treinamentos.prevencao@gmail.com";
-const WHATSAPP = "11939601643 | 11 91290-6754";
-const WHATSAPP_DISPLAY = "11 93960-1643 | 11 91290-6754";
+import { WhatsAppLinks } from "@/components/whatsapp-links";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-[#070b12] text-paper/80">
       <div className="border-t-4 border-ember bg-[#12080a]">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 text-sm md:flex-row md:items-center md:justify-between">
-          <a
-            href={`https://wa.me/55${WHATSAPP}`}
-            className="font-semibold text-paper hover:text-gold"
-            target="_blank"
-            rel="noreferrer"
-          >
-            WhatsApp {WHATSAPP_DISPLAY}
-          </a>
-          <a href={`mailto:${EMAIL}`} className="hover:text-gold">
-            {EMAIL}
+          <WhatsAppLinks className="font-semibold text-paper hover:text-gold" />
+          <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-gold">
+            {CONTACT_EMAIL}
           </a>
         </div>
       </div>

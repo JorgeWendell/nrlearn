@@ -1,10 +1,8 @@
 import Link from "next/link";
+import { WhatsAppLinks } from "@/components/whatsapp-links";
 import { getFeaturedCourses } from "@/lib/catalog";
+import { CONTACT_EMAIL, WHATSAPP_NUMBERS, whatsappHref } from "@/lib/contact";
 import { formatBRL } from "@/lib/format";
-
-const WHATSAPP = "11939601643";
-const WHATSAPP_DISPLAY = "11 93960-1643";
-const EMAIL = "fire.treinamentos.prevencao@gmail.com";
 
 const seguranca = [
   {
@@ -115,14 +113,17 @@ export default async function HomePage() {
               <p>Prevenir é proteger.</p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href={`https://wa.me/55${WHATSAPP}`}
-                className="btn btn-primary"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Falar no WhatsApp
-              </a>
+              {WHATSAPP_NUMBERS.map((item) => (
+                <a
+                  key={item.e164}
+                  href={whatsappHref(item.e164)}
+                  className="btn btn-primary"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  WhatsApp {item.display}
+                </a>
+              ))}
               <Link href="/cursos" className="btn btn-ghost">
                 Ver cursos
               </Link>
@@ -233,16 +234,9 @@ export default async function HomePage() {
             <p className="mt-3 text-sm text-paper/65">Atendimento A nivel Brasil.</p>
           </div>
           <div className="space-y-3 text-sm">
-            <a
-              href={`https://wa.me/55${WHATSAPP}`}
-              className="block font-semibold text-gold hover:text-paper"
-              target="_blank"
-              rel="noreferrer"
-            >
-              WhatsApp {WHATSAPP_DISPLAY}
-            </a>
-            <a href={`mailto:${EMAIL}`} className="block text-paper/80 hover:text-gold">
-              {EMAIL}
+            <WhatsAppLinks stacked className="block font-semibold text-gold hover:text-paper" />
+            <a href={`mailto:${CONTACT_EMAIL}`} className="block text-paper/80 hover:text-gold">
+              {CONTACT_EMAIL}
             </a>
           </div>
         </div>
