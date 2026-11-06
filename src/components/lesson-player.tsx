@@ -134,7 +134,7 @@ export function LessonPlayer({
       ) : null}
 
       {hasMaterial ? (
-        <div className="relative h-[70vh] w-full overflow-hidden rounded-xl bg-[#0f172a]">
+        <div className="relative min-h-[70vh] w-full flex-1 overflow-hidden rounded-xl bg-[#0f172a]">
           {!materialReady ? (
             <div className="absolute inset-0 z-10 grid place-items-center px-6 text-center text-sm text-white/70">
               Carregando apresentação… arquivos grandes podem levar alguns minutos.

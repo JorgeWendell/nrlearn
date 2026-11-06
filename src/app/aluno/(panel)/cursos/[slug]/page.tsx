@@ -45,15 +45,17 @@ export default async function AlunoCoursePage({
     redirect(`/cursos/${slug}`);
   }
 
-  if (hasAccess) {
-    return <CourseWatchEmpty />;
-  }
-
   const ordered = await db
     .select()
     .from(lessons)
     .where(eq(lessons.courseId, course.id))
     .orderBy(asc(lessons.order));
+
+  if (hasAccess) {
+    const first = ordered[0];
+    if (first) redirect(`/aluno/cursos/${slug}/aulas/${first.id}`);
+    return <CourseWatchEmpty />;
+  }
 
   const tests = await db
     .select()
