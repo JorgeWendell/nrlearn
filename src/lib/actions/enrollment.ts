@@ -6,6 +6,42 @@ import { db } from "@/db";
 import { courses, enrollments, revenueEntries } from "@/db/schema";
 import { requireAluno, requireProfessor } from "@/lib/session";
 
+export async function ensureFreeEnrollment(
+  userId: string,
+  course: { id: string; slug: string; price: string; published: boolean },
+) {
+  if (!course.published || Number(course.price) !== 0) return null;
+
+  const [existing] = await db
+    .select()
+    .from(enrollments)
+    .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, course.id)))
+    .limit(1);
+
+  if (existing?.status === "ATIVA" || existing?.status === "CONCLUIDA") return existing;
+
+  const now = new Date();
+  if (existing) {
+    const [updated] = await db
+      .update(enrollments)
+      .set({ status: "ATIVA", releasedAt: now })
+      .where(eq(enrollments.id, existing.id))
+      .returning();
+    return updated ?? existing;
+  }
+
+  const [created] = await db
+    .insert(enrollments)
+    .values({
+      userId,
+      courseId: course.id,
+      status: "ATIVA",
+      releasedAt: now,
+    })
+    .returning();
+  return created;
+}
+
 export async function requestEnrollment(courseId: string) {
   const user = await requireAluno();
   const [course] = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1);
@@ -19,10 +55,12 @@ export async function requestEnrollment(courseId: string) {
 
   if (existing) return { error: "Você já solicitou este curso." };
 
+  const free = Number(course.price) === 0;
   await db.insert(enrollments).values({
     userId: user.id,
     courseId,
-    status: "PENDENTE",
+    status: free ? "ATIVA" : "PENDENTE",
+    releasedAt: free ? new Date() : null,
   });
 
   revalidatePath(`/cursos/${course.slug}`);

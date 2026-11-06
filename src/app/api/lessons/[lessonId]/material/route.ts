@@ -12,6 +12,17 @@ import { getSession } from "@/lib/session";
 export const runtime = "nodejs";
 export const maxDuration = 600;
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Range, Content-Type",
+    },
+  });
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ lessonId: string }> },

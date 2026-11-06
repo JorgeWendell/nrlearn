@@ -36,18 +36,41 @@ export function coverDiskPath(storedName: string) {
 }
 
 export function coverPublicUrl(storedName: string) {
-  return `/api/covers/${storedName}`;
+  const id = storedName.replace(/\.[^.]+$/, "");
+  return `/api/covers/${id}`;
 }
 
 export function storedCoverName(url: string | null | undefined) {
-  const match = url?.match(/^\/api\/covers\/([0-9a-f-]+\.(?:jpe?g|png|webp|gif))$/i);
+  const match = url?.match(/\/api\/covers\/([0-9a-f-]+(?:\.(?:jpe?g|png|webp|gif))?)/i);
   return match?.[1] ?? null;
 }
 
 export function isSafeCoverName(name: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpe?g|png|webp|gif)$/i.test(
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\.(?:jpe?g|png|webp|gif))?$/i.test(
     name,
   );
+}
+
+export async function resolveCoverFile(nameOrId: string) {
+  const decoded = decodeURIComponent(nameOrId).split("/").pop() ?? "";
+  if (!isSafeCoverName(decoded) || decoded.includes("..")) return null;
+
+  if (/\.(?:jpe?g|png|webp|gif)$/i.test(decoded)) {
+    const full = coverDiskPath(decoded);
+    try {
+      await stat(full);
+      return decoded;
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const files = await readdir(coversDir());
+    return files.find((file) => file.startsWith(`${decoded}.`)) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function assertUploadId(uploadId: string) {
@@ -131,7 +154,9 @@ export async function assembleCoverUpload(uploadId: string, filename: string) {
 export async function removeCourseCover(url: string | null | undefined) {
   const name = storedCoverName(url);
   if (!name) return;
-  await unlink(coverDiskPath(name)).catch(() => undefined);
+  const file = await resolveCoverFile(name);
+  if (!file) return;
+  await unlink(coverDiskPath(file)).catch(() => undefined);
 }
 
 export function coverContentType(name: string) {

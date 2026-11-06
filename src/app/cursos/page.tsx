@@ -30,14 +30,20 @@ export default async function CursosPage() {
               <Link
                 key={course.id}
                 href={`/cursos/${course.slug}`}
-                className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-ember/40"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition hover:border-ember/40"
               >
+                {course.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={course.coverUrl} alt="" className="h-40 w-full object-cover" />
+                ) : null}
+                <div className="p-6">
                 <span className="badge">{course.workloadHours}h</span>
                 <h2 className="mt-4 font-serif text-2xl">{course.title}</h2>
                 <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-paper/65">
                   {course.description}
                 </p>
                 <p className="mt-5 font-semibold text-gold">{formatBRL(course.price)}</p>
+                </div>
               </Link>
             ))}
           </div>

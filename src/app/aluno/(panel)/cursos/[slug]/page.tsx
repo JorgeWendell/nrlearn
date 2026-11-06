@@ -4,6 +4,7 @@ import { CourseWatchEmpty } from "@/components/course-watch-shell";
 import { PaidCourseLanding } from "@/components/paid-course-landing";
 import { db } from "@/db";
 import { assessments, courses, enrollments, lessons } from "@/db/schema";
+import { ensureFreeEnrollment } from "@/lib/actions/enrollment";
 import { requireAluno } from "@/lib/session";
 
 function durationLabel(hours: number, seconds: number) {
@@ -27,11 +28,15 @@ export default async function AlunoCoursePage({
   const [course] = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
   if (!course) notFound();
 
-  const [enrollment] = await db
+  let [enrollment] = await db
     .select()
     .from(enrollments)
     .where(and(eq(enrollments.userId, user.id), eq(enrollments.courseId, course.id)))
     .limit(1);
+
+  if (enrollment?.status !== "ATIVA" && enrollment?.status !== "CONCLUIDA") {
+    enrollment = (await ensureFreeEnrollment(user.id, course)) ?? enrollment;
+  }
 
   const hasAccess = enrollment?.status === "ATIVA" || enrollment?.status === "CONCLUIDA";
   const isPaid = Number(course.price) > 0;

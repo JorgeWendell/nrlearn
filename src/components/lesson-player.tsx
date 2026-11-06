@@ -47,8 +47,16 @@ export function LessonPlayer({
   const hasVideo = Boolean(videoUrl);
   const hasMaterial = Boolean(materialName);
   const materialHref = materialFileUrl ?? `/api/lessons/${lessonId}/material`;
-  const officeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(materialHref)}`;
+  const [officeSrc, setOfficeSrc] = useState("");
   const playerId = `yt-${lessonId}`;
+
+  useEffect(() => {
+    if (materialKind !== "office") return;
+    const absolute = materialHref.startsWith("http")
+      ? materialHref
+      : `${window.location.origin}${materialHref}`;
+    setOfficeSrc(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absolute)}`);
+  }, [materialHref, materialKind]);
 
   async function complete() {
     if (saving.current || done) return;
@@ -132,17 +140,19 @@ export function LessonPlayer({
               Carregando apresentação… arquivos grandes podem levar alguns minutos.
             </div>
           ) : null}
-          <iframe
-            title="Material da aula"
-            src={
-              materialKind === "office"
-                ? officeSrc
-                : `${materialHref}${materialHref.includes("#") ? "" : "#toolbar=0&navpanes=0"}`
-            }
-            className="h-full w-full border-0 bg-white"
-            allow="fullscreen"
-            onLoad={() => setMaterialReady(true)}
-          />
+          {materialKind !== "office" || officeSrc ? (
+            <iframe
+              title="Material da aula"
+              src={
+                materialKind === "office"
+                  ? officeSrc
+                  : `${materialHref}${materialHref.includes("#") ? "" : "#toolbar=0&navpanes=0"}`
+              }
+              className="h-full w-full border-0 bg-white"
+              allow="fullscreen"
+              onLoad={() => setMaterialReady(true)}
+            />
+          ) : null}
         </div>
       ) : null}
 

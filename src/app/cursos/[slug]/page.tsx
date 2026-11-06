@@ -22,6 +22,12 @@ export default async function CoursePublicPage({
           <Link href="/cursos" className="text-sm text-paper/50 hover:text-gold">
             ← Voltar aos cursos
           </Link>
+          {course.coverUrl ? (
+            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={course.coverUrl} alt="" className="h-56 w-full object-cover md:h-72" />
+            </div>
+          ) : null}
           <span className="badge mt-6 inline-flex">{course.workloadHours} horas</span>
           <h1 className="mt-4 font-serif text-4xl md:text-5xl">{course.title}</h1>
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-paper/70">{course.description}</p>

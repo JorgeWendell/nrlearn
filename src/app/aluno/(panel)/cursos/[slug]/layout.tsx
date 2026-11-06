@@ -4,6 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { CourseWatchShell } from "@/components/course-watch-shell";
 import { db } from "@/db";
 import { assessments, courses, enrollments, lessonProgress, lessons } from "@/db/schema";
+import { ensureFreeEnrollment } from "@/lib/actions/enrollment";
 import { requireAluno } from "@/lib/session";
 
 export default async function CourseWatchLayout({
@@ -18,11 +19,15 @@ export default async function CourseWatchLayout({
   const [course] = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
   if (!course) notFound();
 
-  const [enrollment] = await db
+  let [enrollment] = await db
     .select()
     .from(enrollments)
     .where(and(eq(enrollments.userId, user.id), eq(enrollments.courseId, course.id)))
     .limit(1);
+
+  if (enrollment?.status !== "ATIVA" && enrollment?.status !== "CONCLUIDA") {
+    enrollment = (await ensureFreeEnrollment(user.id, course)) ?? enrollment;
+  }
 
   const hasAccess = enrollment?.status === "ATIVA" || enrollment?.status === "CONCLUIDA";
   if (!hasAccess) return children;
