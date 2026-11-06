@@ -40,6 +40,7 @@ export function LessonPlayer({
   materialKind?: "pdf" | "office" | "file" | null;
 }) {
   const [done, setDone] = useState(completed);
+  const [materialReady, setMaterialReady] = useState(false);
   const saving = useRef(false);
   const youtubeId = parseYoutubeId(videoUrl);
   const vimeoId = parseVimeoId(videoUrl);
@@ -125,16 +126,24 @@ export function LessonPlayer({
       ) : null}
 
       {hasMaterial ? (
-        <iframe
-          title="Material da aula"
-          src={
-            materialKind === "office"
-              ? officeSrc
-              : `${materialHref}${materialHref.includes("#") ? "" : "#toolbar=0&navpanes=0"}`
-          }
-          className="h-[70vh] w-full rounded-xl border-0 bg-white"
-          allow="fullscreen"
-        />
+        <div className="relative h-[70vh] w-full overflow-hidden rounded-xl bg-[#0f172a]">
+          {!materialReady ? (
+            <div className="absolute inset-0 z-10 grid place-items-center px-6 text-center text-sm text-white/70">
+              Carregando apresentação… arquivos grandes podem levar alguns minutos.
+            </div>
+          ) : null}
+          <iframe
+            title="Material da aula"
+            src={
+              materialKind === "office"
+                ? officeSrc
+                : `${materialHref}${materialHref.includes("#") ? "" : "#toolbar=0&navpanes=0"}`
+            }
+            className="h-full w-full border-0 bg-white"
+            allow="fullscreen"
+            onLoad={() => setMaterialReady(true)}
+          />
+        </div>
       ) : null}
 
       {done ? (

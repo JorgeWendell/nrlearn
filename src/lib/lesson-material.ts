@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { pipeline } from "node:stream/promises";
@@ -42,7 +42,17 @@ export async function saveLessonMaterial(file: File) {
   await mkdir(uploadsDir(), { recursive: true });
   const dest = materialDiskPath(storedName);
   const nodeStream = Readable.fromWeb(file.stream() as Parameters<typeof Readable.fromWeb>[0]);
-  await pipeline(nodeStream, createWriteStream(dest));
+  try {
+    await pipeline(nodeStream, createWriteStream(dest));
+    const written = (await stat(dest)).size;
+    if (file.size > 0 && written !== file.size) {
+      await unlink(dest).catch(() => undefined);
+      throw new Error("O envio do arquivo foi interrompido. Envie novamente.");
+    }
+  } catch (error) {
+    await unlink(dest).catch(() => undefined);
+    throw error;
+  }
 
   const resolvedMime =
     mime && allowed[mime]

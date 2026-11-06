@@ -118,14 +118,54 @@ export function CourseEditorForm({
   );
 }
 
+function uploadLesson(
+  form: HTMLFormElement,
+  onProgress: (percent: number, loaded: number, total: number) => void,
+) {
+  return new Promise<{ ok?: boolean; error?: string }>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/docente/lessons");
+    xhr.timeout = 15 * 60 * 1000;
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)), event.loaded, event.total);
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText) as { ok?: boolean; error?: string };
+        if (xhr.status >= 400) {
+          resolve({ error: data.error ?? `Falha no envio (${xhr.status}).` });
+          return;
+        }
+        resolve(data);
+      } catch {
+        resolve({ error: `Falha no envio (${xhr.status}).` });
+      }
+    };
+    xhr.onerror = () => reject(new Error("network"));
+    xhr.ontimeout = () => reject(new Error("timeout"));
+    xhr.send(new FormData(form));
+  });
+}
+
+function formatMb(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
+}
+
 export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; nextOrder: number }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [loadedBytes, setLoadedBytes] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setPending(true);
+    setProgress(0);
+    setLoadedBytes(0);
+    setTotalBytes(0);
     try {
       const form = event.currentTarget;
       const fileInput = form.querySelector<HTMLInputElement>('input[name="material"]');
@@ -133,20 +173,25 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
       if (file && file.size > 250 * 1024 * 1024) {
         setError("O arquivo deve ter no máximo 250 MB.");
         setPending(false);
+        setProgress(null);
         return;
       }
-      const response = await fetch("/api/docente/lessons", {
-        method: "POST",
-        body: new FormData(form),
+      const data = await uploadLesson(form, (percent, loaded, total) => {
+        setProgress(percent);
+        setLoadedBytes(loaded);
+        setTotalBytes(total);
       });
-      const data = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
-      if (!response.ok || data?.error) {
-        setError(data?.error ?? "Não foi possível adicionar a aula. Tente um arquivo menor.");
+      if (data?.error) {
+        setError(data.error);
         return;
       }
       window.location.reload();
-    } catch {
-      setError("Falha de rede ao enviar o arquivo.");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === "timeout"
+          ? "O envio demorou demais. Tente novamente."
+          : "Falha de rede ao enviar o arquivo.",
+      );
     } finally {
       setPending(false);
     }
@@ -191,12 +236,28 @@ export function LessonEditorForm({ courseId, nextOrder }: { courseId: string; ne
         />
       </label>
       {error ? <p className="text-sm text-ember">{error}</p> : null}
-      <button
-        disabled={pending}
-        className="btn btn-primary"
-      >
-        {pending ? "Adicionando..." : "Adicionar aula"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button disabled={pending} className="btn btn-primary">
+          {pending
+            ? progress !== null && progress < 100
+              ? `Adicionando... ${progress}%`
+              : "Adicionando... processando"
+            : "Adicionar aula"}
+        </button>
+        {pending && totalBytes > 0 ? (
+          <span className="text-sm text-white/60">
+            {formatMb(loadedBytes)} de {formatMb(totalBytes)}
+          </span>
+        ) : null}
+      </div>
+      {pending ? (
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-[#a855f7] transition-[width] duration-150"
+            style={{ width: `${progress ?? 0}%` }}
+          />
+        </div>
+      ) : null}
     </form>
   );
 }

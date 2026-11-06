@@ -9,6 +9,9 @@ import { materialDiskPath } from "@/lib/lesson-material";
 import { verifyMaterialToken } from "@/lib/material-token";
 import { getSession } from "@/lib/session";
 
+export const runtime = "nodejs";
+export const maxDuration = 600;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ lessonId: string }> },
